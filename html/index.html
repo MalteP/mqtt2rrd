@@ -1,0 +1,25 @@
+<html>
+ <head>
+  <title>MQTT2RRD Demo</title>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-2.2.3.min.js"></script>
+  <script>
+   function choose_range(x)
+    {
+     $("IMG[name=temp]").attr("src", "temp-"+x+".png");
+     $("IMG[name=hum]").attr("src", "hum-"+x+".png");
+     $("IMG[name=pres]").attr("src", "pres-"+x+".png");
+    }
+  </script>
+ </head>
+ <body>
+  <h1>MQTT2RRD Demo</h1>
+  <p>
+   Range: <a href="#" onClick="choose_range('1d');">[1 day]</a> <a href="#" onClick="choose_range('3d');">[3 days]</a> <a href="#" onClick="choose_range('1w');">[1 week]</a> <a href="#" onClick="choose_range('1m');">[1 month]</a> <a href="#" onClick="choose_range('3m');">[3 month]</a> <a href="#" onClick="choose_range('1y');">[1 year]</a>
+  </p> 
+  <img src="temp-1w.png" name="temp"><br>
+  <br>
+  <img src="hum-1w.png" name="hum"><br>
+  <br>
+  <img src="pres-1w.png" name="pres"><br>
+ </body>
+</html>
