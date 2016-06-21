@@ -116,11 +116,11 @@ int rrd_cached_db_check_update( struct rrd_cached_config_t *config )
   int rtn;
   if(config->need_update!=0)
    {
+    // Apply delay and minimum inverval
+    if(((now-config->needupdate_timestamp)<config->update_delay)||((now-config->lastupdate_timestamp)<config->update_interval)) return 0;
     // Allocate memory
     ds_names = malloc(DSNAME_LEN*(config->ds_item_count+1));     // [values]\0
     ds_values = malloc(DSVALUE_LEN*(2+config->ds_item_count+1)); // N:[values]\0
-    // Apply delay and minimum inverval
-    if(((now-config->needupdate_timestamp)<config->update_delay)||((now-config->lastupdate_timestamp)<config->update_interval)) return 0;
     // Create list
     *ds_names = '\0';
     sprintf(ds_values, "N");
