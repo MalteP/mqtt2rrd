@@ -1,7 +1,7 @@
 // #############################################################################
 // #                    MQTT RRDtool Sensor Database Client                    #
 // #############################################################################
-// # mqtt2rrd.h - Main program                                                 #
+// # log_functions.c - Log helper functions                                    #
 // #############################################################################
 // #                 Version: 1.0 - Compiler: GCC 5.3 (Linux)                  #
 // #     (c) 2016 by Malte Pöggel - www.MALTEPOEGGEL.de - malte@poeggel.de     #
@@ -20,37 +20,43 @@
 // #      with this program; if not, see <http://www.gnu.org/licenses/>.       #
 // #############################################################################
 
-#ifndef MQTT2RRD_H
-#define MQTT2RRD_H
+#include <stdio.h>
+#include <stdarg.h>
+#include <time.h>
+#include "log_functions.h"
 
- #include "rrd_cached.h"
+FILE *log_fp;
 
- #define DEFAULT_LOGFILE        NULL
- #define DEFAULT_MQTT_HOST      "localhost"
- #define DEFAULT_MQTT_PORT      1883
- #define DEFAULT_MQTT_USER      ""
- #define DEFAULT_MQTT_PASS      ""
- #define DEFAULT_CLIENT_ID      "mqtt2rrd"
- #define DEFAULT_TOPIC          "/sensors/#"
- #define DEFAULT_DATABASE       "espweather.rrd"
- #define DEFAULT_UPDATEDELAY    5;
- #define DEFAULT_UPDATEINTERVAL 10;
+void log_init( char *filename )
+ {
+  if(filename!=NULL)
+   {
+    log_fp = fopen(filename, "a+");
+   } else {
+    log_fp = NULL;
+   }
+ }
 
- // Structure for configuration data
- struct ws_config
-  {
-   const char *logfile;
-   const char *mqtt_host;
-   int mqtt_port;
-   const char *mqtt_user;
-   const char *mqtt_pass;
-   const char *client_id;
-   const char *topic;
-   const char *database;
-   int update_delay;
-   int update_interval;
-   config_setting_t *topics;
-   struct rrd_cached_config_t *rrdconfig;
-  };
 
-#endif
+void log_printf( char *fmt, ... )
+ {
+  va_list args;
+  time_t lt;
+  struct tm tm;
+  FILE *fp = stderr;
+  if(log_fp!=NULL) fp = log_fp;
+  lt = time(NULL);
+  tm = *localtime(&lt);
+  fprintf(fp, "[%02d.%02d.%d %02d:%02d:%02d] ", tm.tm_mday, tm.tm_mon+1, tm.tm_year+1900, tm.tm_hour, tm.tm_min, tm.tm_sec );
+  va_start(args, fmt);
+  vfprintf(fp, fmt, args);
+  va_end(args);
+ }
+
+
+void log_close( void )
+ {
+  if(log_fp==NULL) return;
+  fclose(log_fp);
+  log_fp = NULL;
+ }

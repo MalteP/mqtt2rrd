@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <libconfig.h>
 #include <mosquitto.h>
+#include "log_functions.h"
 #include "mqtt_functions.h"
 #include "mqtt2rrd.h"
 
@@ -59,17 +60,19 @@ int main( int argc, char** argv )
   signal(SIGINT, handle_signal);
   signal(SIGTERM, handle_signal);
 
-  // Init config
+  // Init config and log
   memset(&wscfg, 0, sizeof(struct ws_config));
   config_init(&cfg);
+  log_init(NULL);
 
   // Read config
   if(!config_read_file(&cfg, configfile))
    {
-    printf("Error: Config error in line %d: %s\n", config_error_line(&cfg), config_error_text(&cfg));
+    log_printf("Error: Config error in line %d: %s\n", config_error_line(&cfg), config_error_text(&cfg));
     config_destroy(&cfg);
     return(EXIT_FAILURE);
    }
+  if(!config_lookup_string(&cfg, "logfile", &(wscfg.logfile)))              wscfg.logfile   = DEFAULT_LOGFILE;
   if(!config_lookup_string(&cfg, "mqtt_host", &(wscfg.mqtt_host)))          wscfg.mqtt_host = DEFAULT_MQTT_HOST;
   if(!config_lookup_int(&cfg, "mqtt_port", &(wscfg.mqtt_port)))             wscfg.mqtt_port = DEFAULT_MQTT_PORT;
   if(!config_lookup_string(&cfg, "mqtt_user", &(wscfg.mqtt_user)))          wscfg.mqtt_user = DEFAULT_MQTT_USER;
@@ -79,6 +82,9 @@ int main( int argc, char** argv )
   if(!config_lookup_string(&cfg, "database", &(wscfg.database)))            wscfg.database  = DEFAULT_DATABASE;
   if(!config_lookup_int(&cfg, "update_delay", &(wscfg.update_delay)))       wscfg.update_delay = DEFAULT_UPDATEDELAY;
   if(!config_lookup_int(&cfg, "update_interval", &(wscfg.update_interval))) wscfg.update_interval = DEFAULT_UPDATEINTERVAL;
+
+  // Init log with file from config
+  log_init((char*)wscfg.logfile);
 
   // Register topics
   wscfg.topics = config_lookup(&cfg, "topics");
@@ -93,9 +99,8 @@ int main( int argc, char** argv )
     mosquitto_message_callback_set(mosq, message_callback);
     mosquitto_username_pw_set(mosq, wscfg.mqtt_user, wscfg.mqtt_pass);
 
-    // Connect and subscribe
+    // Connect to server
     rc = mosquitto_connect(mosq, wscfg.mqtt_host, wscfg.mqtt_port, 60);
-    mosquitto_subscribe(mosq, NULL, wscfg.topic, 0);
 
     // Main loop
     while(running)

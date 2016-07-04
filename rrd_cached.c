@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <rrd.h>
+#include "log_functions.h"
 #include "rrd_cached.h"
 
 
@@ -164,8 +165,8 @@ int rrd_cached_db_update_values( struct rrd_cached_config_t *config, char *names
   // Update database
   rtn = rrd_update(5, argv);
   if (rtn == -1)
-   { 
-    printf("Error: Updating DB failed (%s)\n", rrd_get_error()); 
+   {
+    log_printf("Error: Updating DB failed (%s)\n", rrd_get_error()); 
     rrd_clear_error();
     return 1;
    }

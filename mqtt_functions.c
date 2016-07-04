@@ -29,13 +29,21 @@
 #include <libconfig.h>
 #include <mosquitto.h>
 #include "rrd_cached.h"
+#include "log_functions.h"
 #include "mqtt_functions.h"
 
 
 // MQTT client connected
 void connect_callback( struct mosquitto *mosq, void *obj, int result )
  {
-  printf("MQTT connect: result=%d\n", result);
+  struct ws_config *wscfg = (struct ws_config *) obj;
+  if(result==0)
+   {
+    log_printf("MQTT connected.\n");
+    mosquitto_subscribe(mosq, NULL, wscfg->topic, 0);
+   } else {
+    log_printf("MQTT connect failed, result=%d\n", result);
+  }
  }
 
 
@@ -44,14 +52,14 @@ void message_callback( struct mosquitto *mosq, void *obj, const struct mosquitto
  {
   struct ws_config *wscfg = (struct ws_config *) obj;
   const char *ds;
-  printf("MQTT message: topic=%s, payload=%s, len=%d\n", message->topic, (char*)message->payload, message->payloadlen);
+  log_printf("MQTT message: topic=%s, payload=%s, len=%d\n", message->topic, (char*)message->payload, message->payloadlen);
   // Find DS for matching topic in configuration
   if(find_ds(wscfg, message->topic, &ds)==0)
    {
     // Push DS data
     rrd_cached_push_value(wscfg->rrdconfig, ds, (char*)message->payload);
    } else {
-    printf("Warning: No DS found for topic=%s.\n", message->topic);
+    log_printf("Warning: No DS found for topic=%s.\n", message->topic);
    }
  }
 
@@ -95,4 +103,3 @@ int find_ds( struct ws_config *wscfg, char *topic, const char **ds )
    }
   return 1;
  }
-
